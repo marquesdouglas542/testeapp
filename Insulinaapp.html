@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Insulina</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; }
+        input, button { margin: 5px; padding: 8px; width: 90%; }
+        #resultado { font-size: 1.2em; font-weight: bold; margin-top: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Calculadora de Insulina</h2>
+        <label>Glicemia Atual:</label>
+        <input type="number" id="glicemia" placeholder="Digite a glicemia">
+        
+        <label>Carboidratos Ingeridos:</label>
+        <input type="number" id="carbo" placeholder="Digite os carboidratos">
+        
+        <label>Refeição:</label>    
+        <select id="refeicao">
+            <option value="CAFÉ">Café</option>
+            <option value="ALMOÇO">Almoço</option>
+            <option value="LANCHE">Lanche</option>
+            <option value="JANTAR">Jantar</option>
+            <option value="CEIA">Ceia</option>
+        </select>
+        
+        <button onclick="calcularInsulina()">Calcular Insulina</button>
+        <p id="resultado"></p>
+        
+        <button onclick="mostrarBaseDados()">Base de Dados Médico</button>
+    </div>
+
+    <div class="container hidden" id="baseDadosContainer">
+        <h2>Base de Dados Médico</h2>
+        <p>Última atualização: <span id="ultimaModificacao">26/02/2025</span></p>
+        <table border="1" width="100%">
+            <tr>
+                <th>Refeição</th>
+                <th>Insulina</th>
+                <th>CHO</th>
+                <th>Meta</th>
+                <th>FS</th>
+            </tr>
+            <tbody id="baseDados"></tbody>
+        </table>
+        <button onclick="salvarBaseDados()">Salvar Alterações</button>
+    </div>
+
+    <script>
+        let baseDados = {
+            "CAFÉ": { insulina: 0.5, cho: 3, meta: 100, fs: 80 },
+            "ALMOÇO": { insulina: 0.5, cho: 7, meta: 100, fs: 90 },
+            "LANCHE": { insulina: 0.5, cho: 7, meta: 100, fs: 110 },
+            "JANTAR": { insulina: 0.5, cho: 8, meta: 100, fs: 110 },
+            "CEIA": { insulina: 0.5, cho: 10, meta: 120, fs: 100 }
+        };
+
+        function calcularInsulina() {
+            let glicemia = parseFloat(document.getElementById('glicemia').value);
+            let carbo = parseFloat(document.getElementById('carbo').value);
+            let refeicao = document.getElementById('refeicao').value;
+            
+            if (isNaN(glicemia) || isNaN(carbo)) {
+                alert("Por favor, preencha todos os campos corretamente.");
+                return;
+            }
+
+            let dados = baseDados[refeicao];
+            let insulina = ((glicemia - dados.meta) / dados.fs) + (carbo / dados.cho) * dados.insulina;
+            document.getElementById('resultado').innerText = "Insulina a aplicar: " + insulina.toFixed(2);
+        }
+
+        function mostrarBaseDados() {
+            let container = document.getElementById('baseDadosContainer');
+            container.classList.toggle('hidden');
+            let tbody = document.getElementById('baseDados');
+            tbody.innerHTML = "";
+            
+            for (let refeicao in baseDados) {
+                let dados = baseDados[refeicao];
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${refeicao}</td>
+                        <td><input type="number" value="${dados.insulina}" onchange="atualizarBase('${refeicao}', 'insulina', this.value)"></td>
+                        <td><input type="number" value="${dados.cho}" onchange="atualizarBase('${refeicao}', 'cho', this.value)"></td>
+                        <td><input type="number" value="${dados.meta}" onchange="atualizarBase('${refeicao}', 'meta', this.value)"></td>
+                        <td><input type="number" value="${dados.fs}" onchange="atualizarBase('${refeicao}', 'fs', this.value)"></td>
+                    </tr>`;
+            }
+        }
+
+        function atualizarBase(refeicao, campo, valor) {
+            baseDados[refeicao][campo] = parseFloat(valor);
+        }
+
+        function salvarBaseDados() {
+            localStorage.setItem('baseDados', JSON.stringify(baseDados));
+            alert("Base de dados salva com sucesso!");
+        }
+
+        window.onload = function() {
+            let dadosSalvos = localStorage.getItem('baseDados');
+            if (dadosSalvos) {
+                baseDados = JSON.parse(dadosSalvos);
+            }
+        };
+    </script>
+</body>
+</html>
